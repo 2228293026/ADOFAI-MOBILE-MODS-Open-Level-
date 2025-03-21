@@ -104,7 +104,7 @@ BNM::Structures::Mono::String* RDString_Get(BNM::Structures::Mono::String* arg0,
 BNM::Structures::Mono::Array<BNM::Structures::Mono::String *> *openFilePanel(BNM::Structures::Mono::String title, BNM::Structures::Mono::String directory, BNM::Structures::Mono::String extensions, bool multiselect);
 void saveFilePanelAsync(BNM::Structures::Mono::String title, BNM::Structures::Mono::String directory, BNM::Structures::Mono::String defaultName, BNM::Structures::Mono::String extension, BNM::Structures::Mono::Action<BNM::Structures::Mono::String *> cb);
 */
-void invoked(BNM::UnityEngine::Object *arg0, BNM::UnityEngine::Object *arg1, BNM::UnityEngine::Object *arg2,BNM::UnityEngine::Object *arg3);
+void MoveToNextFloor(BNM::UnityEngine::Object *arg0, BNM::UnityEngine::Object *arg1, BNM::UnityEngine::Object *arg2,BNM::UnityEngine::Object *arg3);
 void OnGUI(BNM::UnityEngine::Object *instance);
 double getRealBPM(BNM::UnityEngine::Object* floor,BNM::UnityEngine::Object* nextFloor,float bpm); bool isTwirl();
 template <typename T>
@@ -117,10 +117,11 @@ T Last(T* ptr);
 template <typename T>
 T Last(T& ref);
 */
+BNM::Structures::Mono::String* Persistence_GetLanguageMet();
 BNM::IL2CPP::Il2CppObject* LoadSystemFont(const std::string& fontName, int fontSize = 16);
 BNM::IL2CPP::Il2CppObject* LoadResourceFont(const std::string& resourcePath);
 void scrShowlfDebug(BNM::UnityEngine::Object *instance);
-void AddText(std::string text,float x,float y,int textSize,BNM::Structures::Unity::Color color,BNM::Structures::Unity::Color shadowColor, BNM::Structures::Unity::Vector2 shadowOffset,BNM::IL2CPP::Il2CppObject *font = nullptr,TextAnchor alignment = UpperLeft);
+void AddText(std::string text,float x,float y,int textSize,BNM::Structures::Unity::Color color,BNM::Structures::Unity::Color shadowColor, BNM::Structures::Unity::Vector2 shadowOffset,TextAnchor alignment = UpperLeft);
 std::string FormatFloatToString(float value, std::ostringstream& ss);
 std::string BoolToStr(bool value);
 std::string DifficultyToStr(Difficulty value);
