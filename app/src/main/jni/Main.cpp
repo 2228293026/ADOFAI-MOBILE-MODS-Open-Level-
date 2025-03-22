@@ -104,7 +104,6 @@ void (*old_SFB_StandaloneFileBrowser_SaveFilePanelAsync)(UnityEngine::Object *);
 */
 void (*old_ResetScene)(UnityEngine::Object *);
 
-UnityEngine::Object *floors;
 bool isStarted = false;
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, [[maybe_unused]] void *reserved) {
@@ -383,32 +382,7 @@ void PlayerUpdate(UnityEngine::Object *instance) {
     }*/
     //LoadLevelEditor();
     //__android_log_print(2,"TAG","curBPM:%f,realBPM:%f,Multiplier:%f,currentTile:%f,percentXAcc:%f,percentAcc:%f,progress:%f,ms:%f,clickPerSecond:%f",curBPM,realBPM,multiplier,currentTile,percentXAcc,percentAcc,progress,ms,clickPerSecond);
-    UnityEngine::Object* lm = getFieldValue<UnityEngine::Object *>("","scrLevelMaker","_instance");
-    UnityEngine::Object* conductor = getFieldValue<UnityEngine::Object *>("","scrConductor","_instance");
-    Method<float> songPitch = Class("UnityEngine","AudioSource").GetMethod("get_pitch");
-    UnityEngine::Object* audioSource = getFieldValue<UnityEngine::Object *>("","scrConductor","song",conductor);
-    float PitchAll = songPitch[audioSource].Call();
-    Method<float> musicTimeMet = Class("UnityEngine","AudioSource").GetMethod("get_time");
-    float musicTimeValue = musicTimeMet[audioSource].Call();
-    musicTime = musicTimeValue;
-    UnityEngine::Object* audioClip = callMethod<UnityEngine::Object *>("UnityEngine","AudioSource","get_clip",audioSource);
-    Method<float> musicTotalTimeMet = Class("UnityEngine","AudioClip").GetMethod("get_length");
-    float musicTotalTimeValue = musicTotalTimeMet[audioClip].Call();
-    totalTime = musicTotalTimeValue;
-
-    Field<float> addoffsetFie = Class("","scrConductor").GetField("addoffset");
-    float addoffsetValue = addoffsetFie[conductor].Get();
-    Method<double> songposition_minusiMet = Class("","scrConductor").GetMethod("get_songposition_minusi");
-    float songposition_minusiValue = songposition_minusiMet[conductor].Call();
-
-    mapTime = musicTotalTimeValue + songposition_minusiValue;
-    UnityEngine::Object* listFloorPtr = getFieldValue<UnityEngine::Object*>("","scrLevelMaker","listFloors",lm);
-    UnityEngine::Object lastFloor = Last(listFloorPtr);
-    Class scrFloor = Class("","scrFloor");
-    Field<double> entryTimeVar = scrFloor.GetField("entryTime");
-    double entryTimeVarAll = entryTimeVar[floors].Get();
-    double mapTimeTotalVal = entryTimeVarAll;
-    mapTimeTotal = mapTimeTotalVal;
+    
 }
 
 
@@ -452,7 +426,6 @@ void adofaiStart(UnityEngine::Object *instance) {
 void (*old_MoveToNextFloor)(UnityEngine::Object *,UnityEngine::Object *,UnityEngine::Object *,UnityEngine::Object *);
 void MoveToNextFloor(UnityEngine::Object *arg0, UnityEngine::Object *arg1,UnityEngine::Object *arg2,UnityEngine::Object *arg3) {
     old_MoveToNextFloor(arg0,arg1,arg2,arg3);
-    floors = arg1;
     Class scrFloor = Class("","scrFloor");
     Field<double> entryTimeVar = scrFloor.GetField("entryTime");
     Field<UnityEngine::Object *> nextFloorVar = scrFloor.GetField("nextfloor");
@@ -477,11 +450,8 @@ void MoveToNextFloor(UnityEngine::Object *arg0, UnityEngine::Object *arg1,UnityE
     Method<float> songPitch = Class("UnityEngine","AudioSource").GetMethod("get_pitch");
     UnityEngine::Object* audioSource = getFieldValue<UnityEngine::Object *>("","scrConductor","song",conductor);
     float PitchAll = songPitch[audioSource].Call();
-    //curBPM = levelBPM[conductor].Get() * speed[scrController].Get() * speedOfPitch * speedTrial;
     curBPM = levelBPM[conductor].Get() * PitchAll * speed[controller].Get();
-    //lastBPM = realBPM / speedOfPitch * speedTrial;
     lastBPM = realBPM / PitchAll;
-    //realBPM = getRealBPM(arg1,nextFloor,bpm) * speedOfPitch * speedTrial;
     realBPM = getRealBPM(arg1,nextFloor,bpm) * PitchAll;
     static double prevAvgBPM = 0.0;
     avgBPM = fabs(getRealBPM(arg1, prevFloor, bpm) * PitchAll);
@@ -492,82 +462,8 @@ void MoveToNextFloor(UnityEngine::Object *arg0, UnityEngine::Object *arg1,UnityE
     }
     multiplier = speed[controller].Get();
     clickPerSecond = realBPM / 60;
-    UnityEngine::Object* currFloor = callMethod<UnityEngine::Object *>("","scrController","get_currFloor", controller);
-    Field<double> MarginScale = Class("","scrFloor").GetField("marginScale");
-    double MarginScaleValue = MarginScale[currFloor].Get();
-    margin = MarginScaleValue *100;
-    /*
-        Field<float> currentSpeedTrial = Class("","GCS").GetField("currentSpeedTrial");
-    float speedTrial = currentSpeedTrial.Get();
-    /*
-    Field<int> currentSeqID = Class("","scrController").GetField("currentSeqID"); 
-    int currentSeqIDValue = currentSeqID[scrController].Get();
-    currentTile = currentSeqIDValue;
-    */
-    
-    Field<UnityEngine::Object*> mistakesManagerField = Class("","scrController").GetField("mistakesManager");
-    UnityEngine::Object* mistakesManager = mistakesManagerField[controller].Get();
-    Field<float> percentXAccField = Class("","scrMistakesManager").GetField("percentXAcc"); 
-    float percentXAccValue = percentXAccField[mistakesManager].Get();
-        if (std::isnan(percentXAccValue)) {
-    percentXAccValue = 100;
-    }
-    percentXAcc = percentXAccValue;
-    Field<float> percentAccField = Class("","scrMistakesManager").GetField("percentAcc"); 
-    float percentAccValue = percentAccField[mistakesManager].Get();
-    percentAcc = percentAccValue;
-    Method<String*> sceneName = Class("","ADOBase").GetMethod("get_sceneName");
-    Method<bool> get_isLevelSelect = Class("","ADOBase").GetMethod("get_isLevelSelect");
-    
-        //if (sceneName.Call()->str() == "scnEditor") {
-            if (get_isLevelSelect.Call() == false) {
-            Method<float> percentCompleteMethod = Class("","scrController").GetMethod("get_percentComplete"); 
-    float percentCompleteValue = percentCompleteMethod[controller].Call();
-    progress = percentCompleteValue;
-    }
-
-    Method<float> musicTimeMet = Class("UnityEngine","AudioSource").GetMethod("get_time");
-    float musicTimeValue = musicTimeMet[audioSource].Call();
-    musicTime = musicTimeValue;
-    UnityEngine::Object* audioClip = callMethod<UnityEngine::Object *>("UnityEngine","AudioSource","get_clip",audioSource);
-    Method<float> musicTotalTimeMet = Class("UnityEngine","AudioClip").GetMethod("get_length");
-    float musicTotalTimeValue = musicTotalTimeMet[audioClip].Call();
-    totalTime = musicTotalTimeValue;
-
-    Field<float> addoffsetFie = Class("","scrConductor").GetField("addoffset");
-    float addoffsetValue = addoffsetFie[conductor].Get();
-    Method<double> songposition_minusiMet = Class("","scrConductor").GetMethod("get_songposition_minusi");
-    float songposition_minusiValue = songposition_minusiMet[conductor].Call();
-
-    mapTime = musicTotalTimeValue + songposition_minusiValue;
-    UnityEngine::Object* listFloorPtr = getFieldValue<UnityEngine::Object*>("","scrLevelMaker","listFloors",lm);
-    UnityEngine::Object lastFloor = Last(listFloorPtr);
-    double entryTimeVarAll = entryTimeVar[arg1].Get();
-    double mapTimeTotalVal = entryTimeVarAll;
-    mapTimeTotal = mapTimeTotalVal;
     
     
-    Method<int> getHitsMethod = Class("","scrMistakesManager").GetMethod("GetHits");
-    int tooEarlyNumValue = getHitsMethod[mistakesManager].Call(0);
-    tooEarlyNum = tooEarlyNumValue;
-    int veryEarlyNumValue = getHitsMethod[mistakesManager].Call(1);
-    veryEarlyNum = veryEarlyNumValue;
-    int earlyPerfectNumValue = getHitsMethod[mistakesManager].Call(2);
-    earlyPerfectNum = earlyPerfectNumValue;
-    int perfectNumValue = getHitsMethod[mistakesManager].Call(3);
-    perfectNum = perfectNumValue;
-    int latePerfectNumValue = getHitsMethod[mistakesManager].Call(4);
-    latePerfectNum = latePerfectNumValue;
-    int veryLateNumValue = getHitsMethod[mistakesManager].Call(5);
-    veryLateNum = veryLateNumValue;
-    int tooLateNumValue = getHitsMethod[mistakesManager].Call(6);
-    tooLateNum = tooLateNumValue;
-    int multipressNumValue = getHitsMethod[mistakesManager].Call(7);
-    multipressNum = multipressNumValue;
-    int failMissNumValue = getHitsMethod[mistakesManager].Call(8);
-    failMissNum = failMissNumValue;
-    int failOverloadNumValue = getHitsMethod[mistakesManager].Call(9);
-    failOverloadNum = failOverloadNumValue;
 }
 
 void startPlay(UnityEngine::Object *instance) {
@@ -869,13 +765,86 @@ void OnGUI(UnityEngine::Object *instance) {
     Field<bool> isGameWorld = Class("","scrConductor").GetField("isGameWorld");
     
     isStarted = !_paused[Controller].Get() && isGameWorld[Conductor].Get()/* && Dev.Call()*/;
-    string NotPlaying("<b>Not Playing\nMod By HitMargin (Mod Version : 1.3)</b>");
+    string NotPlaying("Not Playing\nMod By HitMargin (Mod Version : 1.4)");
     string none(NotPlaying);
-    string NotPlayingWithDev("<b>Not Playing\nMod By HitMargin (Mod Version : 1.3,<color=Red>Developer!!</color>)</b>");
+    string NotPlayingWithDev("Not Playing\nMod By HitMargin (Mod Version : 1.4,<color=Red>Developer!!</color>)");
     string dev(NotPlayingWithDev);
 
  
     if (isStarted) {
+        UnityEngine::Object* currFloor = callMethod<UnityEngine::Object *>("","scrController","get_currFloor", Controller);
+    Field<double> MarginScale = Class("","scrFloor").GetField("marginScale");
+    double MarginScaleValue = MarginScale[currFloor].Get();
+    margin = MarginScaleValue *100;
+    Field<UnityEngine::Object*> mistakesManagerField = Class("","scrController").GetField("mistakesManager");
+    UnityEngine::Object* mistakesManager = mistakesManagerField[Controller].Get();
+    Field<float> percentXAccField = Class("","scrMistakesManager").GetField("percentXAcc"); 
+    float percentXAccValue = percentXAccField[mistakesManager].Get();
+        if (isnan(percentXAccValue)) {
+    percentXAccValue = 100;
+    }
+    percentXAcc = percentXAccValue;
+    Field<float> percentAccField = Class("","scrMistakesManager").GetField("percentAcc"); 
+    float percentAccValue = percentAccField[mistakesManager].Get();
+    percentAcc = percentAccValue;
+    Method<String*> sceneName = Class("","ADOBase").GetMethod("get_sceneName");
+    Method<bool> get_isLevelSelect = Class("","ADOBase").GetMethod("get_isLevelSelect");
+    
+        //if (sceneName.Call()->str() == "scnEditor") {
+            if (!get_isLevelSelect.Call()) {
+            Method<float> percentCompleteMethod = Class("","scrController").GetMethod("get_percentComplete"); 
+    float percentCompleteValue = percentCompleteMethod[Controller].Call();
+    progress = percentCompleteValue;
+    }
+
+
+    Method<float> songPitch = Class("UnityEngine","AudioSource").GetMethod("get_pitch");
+    UnityEngine::Object* audioSource = getFieldValue<UnityEngine::Object *>("","scrConductor","song",Conductor);
+    float PitchAll = songPitch[audioSource].Call();
+    Method<float> musicTimeMet = Class("UnityEngine","AudioSource").GetMethod("get_time");
+    float musicTimeValue = musicTimeMet[audioSource].Call();
+    musicTime = musicTimeValue;
+    UnityEngine::Object* audioClip = callMethod<UnityEngine::Object *>("UnityEngine","AudioSource","get_clip",audioSource);
+    Method<float> musicTotalTimeMet = Class("UnityEngine","AudioClip").GetMethod("get_length");
+    float musicTotalTimeValue = musicTotalTimeMet[audioClip].Call();
+    totalTime = musicTotalTimeValue;
+
+    Field<float> addoffsetFie = Class("","scrConductor").GetField("addoffset");
+    float addoffsetValue = addoffsetFie[Conductor].Get();
+    Method<double> songposition_minusiMet = Class("","scrConductor").GetMethod("get_songposition_minusi");
+    float songposition_minusiValue = songposition_minusiMet[Conductor].Call();
+
+    mapTime = musicTotalTimeValue + songposition_minusiValue;
+    /*
+    UnityEngine::Object* listFloorPtr = getFieldValue<UnityEngine::Object*>("","scrLevelMaker","listFloors",lm);
+    UnityEngine::Object lastFloor = Last(listFloorPtr);
+    */
+    Class scrFloor = Class("","scrFloor");
+    Field<double> entryTimeVar = scrFloor.GetField("entryTime");
+    double entryTimeVarAll = entryTimeVar[currFloor].Get();
+    double mapTimeTotalVal = entryTimeVarAll;
+    mapTimeTotal = mapTimeTotalVal;
+        
+        Method<int> getHitsMethod = Class("", "scrMistakesManager").GetMethod("GetHits");
+
+    int hitDataVars[10];
+
+    for (int i = 0; i < 10; i++) {
+        hitDataVars[i] = getHitsMethod[mistakesManager].Call(i);
+    }
+
+    // 将数组中的数据赋值给对应的变量
+    tooEarlyNum = hitDataVars[0];
+    veryEarlyNum = hitDataVars[1];
+    earlyPerfectNum = hitDataVars[2];
+    perfectNum = hitDataVars[3];
+    latePerfectNum = hitDataVars[4];
+    veryLateNum = hitDataVars[5];
+    tooLateNum = hitDataVars[6];
+    multipressNum = hitDataVars[7];
+    failMissNum = hitDataVars[8];
+    failOverloadNum = hitDataVars[9];
+    
         float totalLength = totalTime;
         std::string totalLengthFormatted = secondsToMMSS(totalLength);
 
@@ -1299,6 +1268,7 @@ void fuck() {
 void (*old_scrMistakesManager_AddHit)(UnityEngine::Object *);
 void AddHitMet(UnityEngine::Object *instance, HitMargin hit) {
     old_scrMistakesManager_AddHit(instance);
+    /*
     switch (hit) {
         case TooEarly:
             score += 30;
@@ -1337,7 +1307,7 @@ void AddHitMet(UnityEngine::Object *instance, HitMargin hit) {
     if (hit == FailOverload) {
         score -= 200;
     }
-    
+    */
         if (hit == Perfect) {
             PerfectCombo++;
             } else {
